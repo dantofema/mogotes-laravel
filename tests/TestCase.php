@@ -2,9 +2,9 @@
 
 namespace Dantofema\MogotesLaravel\Tests;
 
+use Dantofema\MogotesLaravel\MogotesLaravelServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Dantofema\MogotesLaravel\MogotesLaravelServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -13,7 +13,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Dantofema\\MogotesLaravel\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'Dantofema\\Mogotes\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 

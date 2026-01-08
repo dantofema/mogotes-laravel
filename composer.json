@@ -67,7 +67,7 @@
                 "Dantofema\\MogotesLaravel\\MogotesLaravelServiceProvider"
             ],
             "aliases": {
-                "MogotesLaravel": "Dantofema\\MogotesLaravel\\Facades\\MogotesLaravel"
+                "MogotesLaravel": "Mogotes"
             }
         }
     },

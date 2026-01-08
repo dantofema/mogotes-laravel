@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @see \Dantofema\MogotesLaravel\MogotesLaravel
  */
-class MogotesLaravel extends Facade
+class Mogotes extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
