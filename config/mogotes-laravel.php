@@ -38,6 +38,21 @@ return [
     'default_headers' => [],
 
     /**
+     * Configuración del driver de Feature Flags (Laravel Pennant).
+     */
+    'feature_flags' => [
+        /**
+         * TTL del caché (en segundos) para el fetch de flags por scope.
+         */
+        'ttl_seconds' => (int) env('MOGOTES_FEATURE_FLAGS_TTL_SECONDS', 300),
+
+        /**
+         * Determina si se habilita el caché de Feature Flags.
+         */
+        'cache_enabled' => (bool) env('MOGOTES_FEATURE_FLAGS_CACHE_ENABLED', true),
+    ],
+
+    /**
      * Configuración de la recepción de webhooks.
      */
     'webhooks' => [

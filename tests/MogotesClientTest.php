@@ -38,7 +38,7 @@ it('envía las cabeceras obligatorias y la url base cuando se construye el reque
 
     $client->buildRequest()->get('/ping');
 
-    Http::assertSent(fn($request): bool => $request->url() === 'https://api.ejemplo.test/ping'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api.ejemplo.test/ping'
         && $request->hasHeader('Accept', 'application/json')
         && $request->hasHeader('X-Mogotes-Api-Key', 'key_de_prueba')
         && $request->hasHeader('User-Agent', 'MogotesLaravel/Testing')
