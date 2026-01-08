@@ -1,15 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dantofema\MogotesLaravel\Pennant;
 
-use Laravel\Pennant\Contracts\FeatureDriver;
-
-class MogotesPennantDriver implements FeatureDriver
+final class MogotesPennantDriver
 {
     /**
      * Define a feature.
      */
-    public function define(string $feature, mixed $default): void
+    public function define(): void
     {
         //
     }
@@ -17,7 +17,7 @@ class MogotesPennantDriver implements FeatureDriver
     /**
      * Get the value of a feature for a scope.
      */
-    public function get(string $feature, mixed $scope): mixed
+    public function get(): mixed
     {
         return false;
     }
@@ -25,7 +25,7 @@ class MogotesPennantDriver implements FeatureDriver
     /**
      * Set the value of a feature for a scope.
      */
-    public function set(string $feature, mixed $scope, mixed $value): void
+    public function set(): void
     {
         //
     }
@@ -35,7 +35,7 @@ class MogotesPennantDriver implements FeatureDriver
      *
      * @return array<string, mixed>
      */
-    public function getAll(array $features, mixed $scope): array
+    public function getAll(): array
     {
         return [];
     }
@@ -43,7 +43,7 @@ class MogotesPennantDriver implements FeatureDriver
     /**
      * Delete the value of a feature for a scope.
      */
-    public function delete(string $feature, mixed $scope): void
+    public function delete(): void
     {
         //
     }
@@ -51,7 +51,7 @@ class MogotesPennantDriver implements FeatureDriver
     /**
      * Purge all features from storage.
      */
-    public function purge(array $features): void
+    public function purge(): void
     {
         //
     }

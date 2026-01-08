@@ -2,6 +2,7 @@
 
 namespace Dantofema\MogotesLaravel\Facades;
 
+use Dantofema\MogotesLaravel\MogotesLaravel;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -11,6 +12,6 @@ class Mogotes extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \Dantofema\MogotesLaravel\MogotesLaravel::class;
+        return MogotesLaravel::class;
     }
 }

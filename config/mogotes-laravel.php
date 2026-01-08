@@ -15,6 +15,29 @@ return [
     'api_key' => env('MOGOTES_API_KEY'),
 
     /**
+     * Timeout total del request (en segundos).
+     * Debe ser estricto para evitar bloquear la aplicación cliente ante caídas del servicio.
+     */
+    'timeout_seconds' => (int) env('MOGOTES_TIMEOUT_SECONDS', 5),
+
+    /**
+     * Timeout de conexión (en segundos).
+     */
+    'connect_timeout_seconds' => (int) env('MOGOTES_CONNECT_TIMEOUT_SECONDS', 2),
+
+    /**
+     * User-Agent a enviar en todas las peticiones.
+     */
+    'user_agent' => env('MOGOTES_USER_AGENT', 'MogotesLaravel'),
+
+    /**
+     * Cabeceras adicionales a incluir en todas las peticiones.
+     *
+     * @var array<string, string>
+     */
+    'default_headers' => [],
+
+    /**
      * Configuración de la recepción de webhooks.
      */
     'webhooks' => [

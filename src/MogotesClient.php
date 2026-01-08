@@ -1,25 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dantofema\MogotesLaravel;
 
+use Dantofema\MogotesLaravel\Exceptions\MogotesMisconfiguredException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class MogotesClient
+final readonly class MogotesClient
 {
+    /**
+     * @param  array<string, string>  $defaultHeaders
+     */
     public function __construct(
-        protected string $baseUrl,
-        protected string $apiKey,
+        private string $baseUrl,
+        private ?string $apiKey,
+        private int $timeoutSeconds,
+        private int $connectTimeoutSeconds,
+        private string $userAgent,
+        private array $defaultHeaders = [],
     ) {}
 
     public function buildRequest(): PendingRequest
     {
+        if ($this->apiKey === null || $this->apiKey === '') {
+            throw MogotesMisconfiguredException::missingApiKey();
+        }
+
         return Http::baseUrl($this->baseUrl)
-            ->withHeaders([
-                'X-Mogotes-Api-Key' => $this->apiKey,
-                'Accept' => 'application/json',
-                'User-Agent' => 'MogotesLaravel/1.0',
-            ])
-            ->timeout(2);
+            ->acceptJson()
+            ->withHeaders($this->buildHeaders())
+            ->connectTimeout($this->normalizedConnectTimeoutSeconds())
+            ->timeout($this->normalizedTimeoutSeconds());
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buildHeaders(): array
+    {
+        return [
+            ...$this->defaultHeaders,
+            'X-Mogotes-Api-Key' => (string) $this->apiKey,
+            'User-Agent' => $this->userAgent,
+        ];
+    }
+
+    private function normalizedTimeoutSeconds(): int
+    {
+        return max(1, $this->timeoutSeconds);
+    }
+
+    private function normalizedConnectTimeoutSeconds(): int
+    {
+        return max(1, $this->connectTimeoutSeconds);
     }
 }

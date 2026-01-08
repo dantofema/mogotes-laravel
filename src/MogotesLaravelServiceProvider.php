@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dantofema\MogotesLaravel;
 
 use Dantofema\MogotesLaravel\Commands\MogotesLaravelCommand;
@@ -13,33 +15,46 @@ class MogotesLaravelServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         if (class_exists(Feature::class)) {
-            Feature::extend('mogotes', function ($app) {
-                return new MogotesPennantDriver;
-            });
+            Feature::extend('mogotes', fn($app) => new MogotesPennantDriver);
         }
     }
 
     public function packageRegistered(): void
     {
-        $this->app->singleton(MogotesClient::class, function ($app) {
+        $this->app->singleton(function ($app): MogotesClient {
+            /** @var string $baseUrl */
+            $baseUrl = (string) config('mogotes-laravel.base_url');
+
+            /** @var string|null $apiKey */
+            $apiKey = config('mogotes-laravel.api_key');
+
+            /** @var int $timeoutSeconds */
+            $timeoutSeconds = (int) config('mogotes-laravel.timeout_seconds');
+
+            /** @var int $connectTimeoutSeconds */
+            $connectTimeoutSeconds = (int) config('mogotes-laravel.connect_timeout_seconds');
+
+            /** @var string $userAgent */
+            $userAgent = (string) config('mogotes-laravel.user_agent');
+
+            /** @var array<string, string> $defaultHeaders */
+            $defaultHeaders = (array) config('mogotes-laravel.default_headers', []);
+
             return new MogotesClient(
-                config('mogotes-laravel.base_url'),
-                config('mogotes-laravel.api_key')
+                baseUrl: $baseUrl,
+                apiKey: $apiKey,
+                timeoutSeconds: $timeoutSeconds,
+                connectTimeoutSeconds: $connectTimeoutSeconds,
+                userAgent: $userAgent,
+                defaultHeaders: $defaultHeaders,
             );
         });
 
-        $this->app->singleton(MogotesLaravel::class, function ($app) {
-            return new MogotesLaravel($app->make(MogotesClient::class));
-        });
+        $this->app->singleton(fn($app): MogotesLaravel => new MogotesLaravel($app->make(MogotesClient::class)));
     }
 
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('mogotes-laravel')
             ->hasConfigFile()

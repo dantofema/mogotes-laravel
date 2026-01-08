@@ -15,7 +15,7 @@ class MogotesWebhookController extends Controller
 
         $payload = $request->all();
 
-        WebhookReceived::dispatch($payload);
+        event(new WebhookReceived($payload));
 
         return response()->json(['status' => 'ok']);
     }

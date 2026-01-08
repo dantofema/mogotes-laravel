@@ -12,7 +12,7 @@ class MogotesChannel
     public function send(object $notifiable, Notification $notification): void
     {
         // @phpstan-ignore-next-line
-        $message = $notification->toMogotes($notifiable);
+        $notification->toMogotes($notifiable);
 
         // TODO: Enviar usando MogotesClient
     }
