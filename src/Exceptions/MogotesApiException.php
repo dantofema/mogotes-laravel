@@ -31,11 +31,11 @@ class MogotesApiException extends RuntimeException
     {
         $status = $response->status();
 
-        /** @var array{error?: array{code?: string, message?: string}}|null $body */
+        /** @var array{error?: array{code?: mixed, message?: mixed}}|null $body */
         $body = $response->json();
 
         $errorCode = $body['error']['code'] ?? null;
-        $errorMessage = $body['error']['message'] ?? "Error {$status} desde Mogotes";
+        $errorMessage = $body['error']['message'] ?? null;
 
         return new self(
             message: is_string($errorMessage) ? $errorMessage : "Error {$status} desde Mogotes",

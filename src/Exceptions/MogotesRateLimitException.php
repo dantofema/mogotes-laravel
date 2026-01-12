@@ -28,16 +28,16 @@ final class MogotesRateLimitException extends MogotesApiException
 
     public static function fromResponse(Response $response): self
     {
-        /** @var array{error?: array{message?: string}}|null $body */
+        /** @var array{error?: array{message?: mixed}}|null $body */
         $body = $response->json();
 
-        $errorMessage = $body['error']['message'] ?? 'Límite de tasa excedido. Intenta nuevamente más tarde.';
+        $errorMessage = $body['error']['message'] ?? null;
 
         $retryAfter = $response->header('Retry-After');
-        $retryAfterSeconds = is_string($retryAfter) && $retryAfter !== '' ? (int) $retryAfter : 60;
+        $retryAfterSeconds = $retryAfter !== '' ? (int) $retryAfter : 60;
 
         $rateLimitLimit = $response->header('X-RateLimit-Limit');
-        $rateLimitLimitValue = is_string($rateLimitLimit) && $rateLimitLimit !== '' ? (int) $rateLimitLimit : null;
+        $rateLimitLimitValue = $rateLimitLimit !== '' ? (int) $rateLimitLimit : null;
 
         return new self(
             message: is_string($errorMessage) ? $errorMessage : 'Límite de tasa excedido. Intenta nuevamente más tarde.',

@@ -10,10 +10,10 @@ final class MogotesUnauthorizedException extends MogotesApiException
 {
     public static function fromResponse(Response $response): self
     {
-        /** @var array{error?: array{code?: string, message?: string}}|null $body */
+        /** @var array{error?: array{code?: mixed, message?: mixed}}|null $body */
         $body = $response->json();
 
-        $errorMessage = $body['error']['message'] ?? 'No autorizado. Verifica tu API key de Mogotes.';
+        $errorMessage = $body['error']['message'] ?? null;
 
         return new self(
             message: is_string($errorMessage) ? $errorMessage : 'No autorizado. Verifica tu API key de Mogotes.',

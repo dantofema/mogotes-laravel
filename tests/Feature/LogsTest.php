@@ -157,7 +157,7 @@ describe('Slice 003 - Logs', function (): void {
                 ->and($result['data'])->toHaveCount(2)
                 ->and($result['meta']['total'])->toBe(2);
 
-            Http::assertSent(fn($request): bool => $request->url() === 'https://api.mogotes.test/v1/logs'
+            Http::assertSent(fn ($request): bool => $request->url() === 'https://api.mogotes.test/v1/logs'
                 && $request->method() === 'GET'
                 && $request->hasHeader('X-API-KEY', 'test_api_key'));
         });
@@ -175,7 +175,7 @@ describe('Slice 003 - Logs', function (): void {
 
             expect($result['data'])->toHaveCount(1);
 
-            Http::assertSent(fn($request): bool => str_contains((string) $request->url(), 'level=error'));
+            Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'level=error'));
         });
 
         it('puede listar logs con múltiples filtros', function (): void {
@@ -330,7 +330,7 @@ describe('Slice 003 - Logs', function (): void {
 
             Mogotes::log()->info('Test message');
 
-            Http::assertSent(fn($request): bool => $request->hasHeader('X-API-KEY', 'test_api_key')
+            Http::assertSent(fn ($request): bool => $request->hasHeader('X-API-KEY', 'test_api_key')
                 && $request->hasHeader('Accept', 'application/json'));
         });
     });

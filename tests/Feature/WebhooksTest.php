@@ -45,7 +45,7 @@ describe('Slice 004 - Webhooks', function (): void {
                     'message' => 'Webhook recibido correctamente',
                 ]);
 
-            Event::assertDispatched(WebhookReceived::class, fn($event): bool => $event->payload === $payload
+            Event::assertDispatched(WebhookReceived::class, fn ($event): bool => $event->payload === $payload
                 && $event->signature === $signature
                 && $event->timestamp === $timestamp);
         });

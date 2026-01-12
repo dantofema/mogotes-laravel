@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Client\PendingRequest;
 use Dantofema\MogotesLaravel\Exceptions\MogotesMisconfiguredException;
 use Dantofema\MogotesLaravel\MogotesClient;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
 describe('Slice 0 - Infraestructura y Cliente Base', function (): void {

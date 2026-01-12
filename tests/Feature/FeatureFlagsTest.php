@@ -28,7 +28,7 @@ describe('Slice 001 - Feature Flags', function (): void {
             expect(Mogotes::feature()->IsActive('new-ui'))->toBeTrue();
             expect(Mogotes::feature()->IsActive('beta-feature'))->toBeFalse();
 
-            Http::assertSent(fn($request): bool => $request->url() === 'https://api.mogotes.test/v1/feature-flags'
+            Http::assertSent(fn ($request): bool => $request->url() === 'https://api.mogotes.test/v1/feature-flags'
                 && $request->hasHeader('X-API-KEY', 'test_api_key')
                 && $request->hasHeader('Accept', 'application/json'));
         });
@@ -44,7 +44,7 @@ describe('Slice 001 - Feature Flags', function (): void {
 
             expect(Mogotes::feature()->IsActive('new-ui', 'user_123'))->toBeTrue();
 
-            Http::assertSent(fn($request): bool => str_contains((string) $request->url(), 'scope_id=user_123'));
+            Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'scope_id=user_123'));
         });
 
         it('retorna false cuando un flag no existe en la respuesta', function (): void {
@@ -157,7 +157,7 @@ describe('Slice 001 - Feature Flags', function (): void {
 
             Mogotes::feature()->IsActive('test-flag');
 
-            Http::assertSent(fn($request): bool => $request->hasHeader('X-API-KEY', 'test_api_key'));
+            Http::assertSent(fn ($request): bool => $request->hasHeader('X-API-KEY', 'test_api_key'));
         });
 
         it('envía Accept application/json', function (): void {
@@ -169,7 +169,7 @@ describe('Slice 001 - Feature Flags', function (): void {
 
             Mogotes::feature()->IsActive('test-flag');
 
-            Http::assertSent(fn($request): bool => $request->hasHeader('Accept', 'application/json'));
+            Http::assertSent(fn ($request): bool => $request->hasHeader('Accept', 'application/json'));
         });
 
         it('codifica correctamente el scope_id en la URL', function (): void {
@@ -181,7 +181,7 @@ describe('Slice 001 - Feature Flags', function (): void {
 
             Mogotes::feature()->IsActive('test-flag', 'user@example.com');
 
-            Http::assertSent(fn($request): bool => str_contains((string) $request->url(), 'scope_id='.urlencode('user@example.com')));
+            Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'scope_id='.urlencode('user@example.com')));
         });
     });
 
