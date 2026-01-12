@@ -56,7 +56,7 @@ final readonly class MogotesClient
     {
         return [
             ...$this->defaultHeaders,
-            'X-Mogotes-Api-Key' => (string) $this->apiKey,
+            'X-API-KEY' => (string) $this->apiKey,
             'User-Agent' => $this->userAgent,
         ];
     }

@@ -5,15 +5,11 @@ declare(strict_types=1);
 namespace Dantofema\MogotesLaravel;
 
 use Dantofema\MogotesLaravel\Commands\MogotesLaravelCommand;
-use Illuminate\Contracts\Foundation\Application;
-use Laravel\Pennant\Feature;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class MogotesLaravelServiceProvider extends PackageServiceProvider
 {
-
-
     public function packageRegistered(): void
     {
         $this->app->singleton(function ($app): MogotesClient {

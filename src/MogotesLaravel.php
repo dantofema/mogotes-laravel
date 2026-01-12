@@ -1,12 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dantofema\MogotesLaravel;
+
+use Dantofema\MogotesLaravel\Services\FeatureFlagsService;
 
 class MogotesLaravel
 {
+    private ?FeatureFlagsService $featureFlagsService = null;
+
     public function __construct(
         protected MogotesClient $client
     ) {}
+
+    /**
+     * Obtiene el servicio de Feature Flags.
+     */
+    public function feature(): FeatureFlagsService
+    {
+        if ($this->featureFlagsService === null) {
+            $this->featureFlagsService = new FeatureFlagsService($this->client);
+        }
+
+        return $this->featureFlagsService;
+    }
 
     /**
      * Envía una notificación utilizando una plantilla gestionada en Mogotes.

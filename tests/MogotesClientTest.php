@@ -101,7 +101,7 @@ describe('Slice 0 - Infraestructura y Cliente Base', function (): void {
 
             Http::assertSent(fn ($request): bool => $request->url() === 'https://api.ejemplo.test/ping'
                 && $request->hasHeader('Accept', 'application/json')
-                && $request->hasHeader('X-Mogotes-Api-Key', 'key_de_prueba')
+                && $request->hasHeader('X-API-KEY', 'key_de_prueba')
                 && $request->hasHeader('User-Agent', 'MogotesLaravel/Testing')
                 && $request->hasHeader('X-Custom', 'valor'));
 
