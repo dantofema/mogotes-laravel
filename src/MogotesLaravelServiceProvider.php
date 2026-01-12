@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Dantofema\MogotesLaravel;
 
 use Dantofema\MogotesLaravel\Commands\MogotesLaravelCommand;
-use Dantofema\MogotesLaravel\Pennant\MogotesPennantDriver;
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Pennant\Feature;
 use Spatie\LaravelPackageTools\Package;
@@ -13,31 +12,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class MogotesLaravelServiceProvider extends PackageServiceProvider
 {
-    public function packageBooted(): void
-    {
-        if (class_exists(Feature::class)) {
-            Feature::extend('mogotes', function (Application $app, array $config): MogotesPennantDriver {
-                /** @var string $baseUrl */
-                $baseUrl = (string) ($config['base_url'] ?? config('mogotes-laravel.base_url'));
 
-                /** @var string|null $apiKey */
-                $apiKey = $config['api_key'] ?? config('mogotes-laravel.api_key');
-
-                /** @var int $ttlSeconds */
-                $ttlSeconds = (int) ($config['ttl_seconds'] ?? config('mogotes-laravel.feature_flags.ttl_seconds', 300));
-
-                /** @var bool $cacheEnabled */
-                $cacheEnabled = (bool) ($config['cache_enabled'] ?? config('mogotes-laravel.feature_flags.cache_enabled', true));
-
-                return new MogotesPennantDriver(
-                    baseUrl: $baseUrl,
-                    apiKey: (string) $apiKey,
-                    ttlSeconds: $ttlSeconds,
-                    cacheEnabled: $cacheEnabled,
-                );
-            });
-        }
-    }
 
     public function packageRegistered(): void
     {
