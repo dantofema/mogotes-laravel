@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dantofema\MogotesLaravel;
 
 use Dantofema\MogotesLaravel\Services\FeatureFlagsService;
+use Dantofema\MogotesLaravel\Services\LogsService;
 use Dantofema\MogotesLaravel\Services\NotificationsService;
 
 class MogotesLaravel
@@ -12,6 +13,8 @@ class MogotesLaravel
     private ?FeatureFlagsService $featureFlagsService = null;
 
     private ?NotificationsService $notificationsService = null;
+
+    private ?LogsService $logsService = null;
 
     public function __construct(
         protected MogotesClient $client
@@ -27,6 +30,18 @@ class MogotesLaravel
         }
 
         return $this->featureFlagsService;
+    }
+
+    /**
+     * Obtiene el servicio de Logs.
+     */
+    public function log(): LogsService
+    {
+        if ($this->logsService === null) {
+            $this->logsService = new LogsService($this->client);
+        }
+
+        return $this->logsService;
     }
 
     /**
