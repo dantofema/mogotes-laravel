@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Dantofema\MogotesLaravel;
 
 use Dantofema\MogotesLaravel\Services\FeatureFlagsService;
+use Dantofema\MogotesLaravel\Services\NotificationsService;
 
 class MogotesLaravel
 {
     private ?FeatureFlagsService $featureFlagsService = null;
+
+    private ?NotificationsService $notificationsService = null;
 
     public function __construct(
         protected MogotesClient $client
@@ -27,6 +30,46 @@ class MogotesLaravel
     }
 
     /**
+     * Envía una notificación por email usando una plantilla de Mogotes.
+     *
+     * @param  string  $template  El identificador de la plantilla.
+     * @param  string  $to  El destinatario (email).
+     * @param  array<string, mixed>  $data  Variables para inyectar en la plantilla.
+     * @param  string|null  $idempotencyKey  Clave de idempotencia (se genera automáticamente si es null).
+     * @return array<string, mixed> Respuesta de la API de Mogotes.
+     */
+    public function email(string $template, string $to, array $data = [], ?string $idempotencyKey = null): array
+    {
+        return $this->notifications()->email($template, $to, $data, $idempotencyKey);
+    }
+
+    /**
+     * Envía una notificación por WhatsApp usando una plantilla de Mogotes.
+     *
+     * @param  string  $template  El identificador de la plantilla.
+     * @param  string  $to  El destinatario (teléfono).
+     * @param  array<string, mixed>  $data  Variables para inyectar en la plantilla.
+     * @param  string|null  $idempotencyKey  Clave de idempotencia (se genera automáticamente si es null).
+     * @return array<string, mixed> Respuesta de la API de Mogotes.
+     */
+    public function whatsapp(string $template, string $to, array $data = [], ?string $idempotencyKey = null): array
+    {
+        return $this->notifications()->whatsapp($template, $to, $data, $idempotencyKey);
+    }
+
+    /**
+     * Obtiene el servicio de notificaciones.
+     */
+    public function notifications(): NotificationsService
+    {
+        if ($this->notificationsService === null) {
+            $this->notificationsService = new NotificationsService($this->client);
+        }
+
+        return $this->notificationsService;
+    }
+
+    /**
      * Envía una notificación utilizando una plantilla gestionada en Mogotes.
      *
      * @param  string  $template  El identificador o key de la plantilla.
@@ -34,16 +77,11 @@ class MogotesLaravel
      * @param  string  $to  El destinatario (email o teléfono).
      * @param  array<string, mixed>  $data  Variables para inyectar en la plantilla.
      * @return array<string, mixed> Respuesta de la API de Mogotes.
+     *
+     * @deprecated Usar email() o whatsapp() en su lugar
      */
     public function sendNotification(string $template, string $channel, string $to, array $data = []): array
     {
-        // TODO: Implementar llamada a la API de Mogotes usando MogotesClient
-        return [
-            'status' => 'accepted',
-            'channel' => $channel,
-            'template_key' => $template,
-            'to' => $to,
-            'data' => $data,
-        ];
+        return $this->notifications()->send($channel, $template, $to, $data);
     }
 }
