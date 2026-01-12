@@ -20,7 +20,21 @@ final readonly class MogotesClient
         private int $connectTimeoutSeconds,
         private string $userAgent,
         private array $defaultHeaders = [],
-    ) {}
+    ) {
+        $this->validateBaseUrl();
+    }
+
+    private function validateBaseUrl(): void
+    {
+        if ($this->baseUrl === '' || filter_var($this->baseUrl, FILTER_VALIDATE_URL) === false) {
+            throw MogotesMisconfiguredException::invalidServerUrl($this->baseUrl);
+        }
+
+        $scheme = parse_url($this->baseUrl, PHP_URL_SCHEME);
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            throw MogotesMisconfiguredException::invalidServerUrl($this->baseUrl);
+        }
+    }
 
     public function buildRequest(): PendingRequest
     {
