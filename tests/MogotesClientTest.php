@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Client\PendingRequest;
 use Dantofema\MogotesLaravel\Exceptions\MogotesMisconfiguredException;
 use Dantofema\MogotesLaravel\MogotesClient;
 use Illuminate\Support\Facades\Http;
@@ -148,7 +149,7 @@ describe('Slice 0 - Infraestructura y Cliente Base', function (): void {
             $request = $client->buildRequest();
 
             // Verificamos que el request tiene configurados los timeouts
-            expect($request)->toBeInstanceOf(\Illuminate\Http\Client\PendingRequest::class);
+            expect($request)->toBeInstanceOf(PendingRequest::class);
         });
 
         it('normaliza timeouts a un mínimo de 1 segundo', function (): void {
@@ -168,7 +169,7 @@ describe('Slice 0 - Infraestructura y Cliente Base', function (): void {
             // No debe lanzar excepción, ya que se normalizan internamente
             $request = $client->buildRequest();
 
-            expect($request)->toBeInstanceOf(\Illuminate\Http\Client\PendingRequest::class);
+            expect($request)->toBeInstanceOf(PendingRequest::class);
         });
     });
 

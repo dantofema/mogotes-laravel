@@ -77,7 +77,7 @@ final readonly class NotificationsService
         ?string $idempotencyKey = null
     ): array {
         try {
-            $idempotencyKey = $idempotencyKey ?? (string) Str::uuid();
+            $idempotencyKey ??= (string) Str::uuid();
 
             $payload = [
                 'channel' => $channel,

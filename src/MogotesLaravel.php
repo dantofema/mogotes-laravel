@@ -25,7 +25,7 @@ class MogotesLaravel
      */
     public function feature(): FeatureFlagsService
     {
-        if ($this->featureFlagsService === null) {
+        if (!$this->featureFlagsService instanceof FeatureFlagsService) {
             $this->featureFlagsService = new FeatureFlagsService($this->client);
         }
 
@@ -37,7 +37,7 @@ class MogotesLaravel
      */
     public function log(): LogsService
     {
-        if ($this->logsService === null) {
+        if (!$this->logsService instanceof LogsService) {
             $this->logsService = new LogsService($this->client);
         }
 
@@ -77,7 +77,7 @@ class MogotesLaravel
      */
     public function notifications(): NotificationsService
     {
-        if ($this->notificationsService === null) {
+        if (!$this->notificationsService instanceof NotificationsService) {
             $this->notificationsService = new NotificationsService($this->client);
         }
 

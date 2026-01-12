@@ -45,11 +45,9 @@ describe('Slice 004 - Webhooks', function (): void {
                     'message' => 'Webhook recibido correctamente',
                 ]);
 
-            Event::assertDispatched(WebhookReceived::class, function ($event) use ($payload, $signature, $timestamp): bool {
-                return $event->payload === $payload
-                    && $event->signature === $signature
-                    && $event->timestamp === $timestamp;
-            });
+            Event::assertDispatched(WebhookReceived::class, fn($event): bool => $event->payload === $payload
+                && $event->signature === $signature
+                && $event->timestamp === $timestamp);
         });
 
         it('procesa webhooks con diferentes tipos de eventos', function (string $eventType): void {
