@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Dantofema\MogotesLaravel\Exceptions\MogotesApiException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesConnectionException;
+use Dantofema\MogotesLaravel\Exceptions\MogotesIdempotencyConflictException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesUnauthorizedException;
 use Dantofema\MogotesLaravel\Facades\Mogotes;
 use Illuminate\Support\Facades\Http;
@@ -270,6 +271,207 @@ describe('Slice 002 - Notificaciones', function (): void {
 
                 return $body['channel'] === 'sms';
             });
+        });
+    });
+});
+
+describe('Slice 005 - Hardening (Idempotency Conflict)', function (): void {
+    beforeEach(function (): void {
+        config()->set('mogotes-laravel.base_url', 'https://api.mogotes.test');
+        config()->set('mogotes-laravel.api_key', 'test_api_key');
+    });
+
+    describe('Happy paths - Idempotencia correcta', function (): void {
+        it('acepta 201 en primer envío', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_123',
+                    'status' => 'queued',
+                    'channel' => 'email',
+                ], 201),
+            ]);
+
+            $result = Mogotes::email(
+                template: 'order_paid',
+                to: 'buyer@example.com',
+                data: ['reference' => 'ABC-123'],
+                idempotencyKey: 'test-key-001'
+            );
+
+            expect($result)->toHaveKey('id')
+                ->and($result['id'])->toBe('notif_123');
+        });
+
+        it('acepta 200 en retry con mismo payload (idempotencia hit)', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_123',
+                    'status' => 'queued',
+                    'channel' => 'email',
+                ], 200),
+            ]);
+
+            $result = Mogotes::email(
+                template: 'order_paid',
+                to: 'buyer@example.com',
+                data: ['reference' => 'ABC-123'],
+                idempotencyKey: 'test-key-001'
+            );
+
+            expect($result)->toHaveKey('id')
+                ->and($result['id'])->toBe('notif_123');
+        });
+    });
+
+    describe('Failure paths - Conflicto de idempotencia', function (): void {
+        it('lanza MogotesIdempotencyConflictException en 409', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'El idempotency_key ya fue usado con un payload distinto.',
+                    ],
+                ], 409, ['X-Correlation-Id' => 'corr-123']),
+            ]);
+
+            expect(fn () => Mogotes::email(
+                template: 'order_paid',
+                to: 'different@example.com', // Cambio de destinatario
+                data: ['reference' => 'ABC-123'],
+                idempotencyKey: 'test-key-001' // Misma key
+            ))->toThrow(MogotesIdempotencyConflictException::class);
+        });
+
+        it('la excepción contiene el idempotency_key', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'El idempotency_key ya fue usado con un payload distinto.',
+                    ],
+                ], 409),
+            ]);
+
+            try {
+                Mogotes::email(
+                    template: 'order_paid',
+                    to: 'different@example.com',
+                    data: ['reference' => 'XYZ-789'], // Cambio de datos
+                    idempotencyKey: 'test-key-conflict'
+                );
+
+                $this->fail('Debería haber lanzado MogotesIdempotencyConflictException');
+            } catch (MogotesIdempotencyConflictException $e) {
+                expect($e->idempotencyKey)->toBe('test-key-conflict');
+            }
+        });
+
+        it('la excepción contiene el correlation_id', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'Conflicto detectado.',
+                    ],
+                ], 409, ['X-Correlation-Id' => 'corr-xyz-456']),
+            ]);
+
+            try {
+                Mogotes::email(
+                    template: 'order_paid',
+                    to: 'different@example.com',
+                    data: ['reference' => 'ABC-123'],
+                    idempotencyKey: 'test-key-002'
+                );
+
+                $this->fail('Debería haber lanzado MogotesIdempotencyConflictException');
+            } catch (MogotesIdempotencyConflictException $e) {
+                expect($e->correlationId)->toBe('corr-xyz-456');
+            }
+        });
+
+        it('la excepción contiene el mensaje del servidor', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'Mensaje personalizado del servidor.',
+                    ],
+                ], 409),
+            ]);
+
+            expect(fn () => Mogotes::email(
+                template: 'order_paid',
+                to: 'different@example.com',
+                data: ['reference' => 'ABC-123'],
+                idempotencyKey: 'test-key-003'
+            ))->toThrow(MogotesIdempotencyConflictException::class, 'Mensaje personalizado del servidor.');
+        });
+
+        it('no reintenta automáticamente en 409', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'Conflicto.',
+                    ],
+                ], 409),
+            ]);
+
+            try {
+                Mogotes::email(
+                    template: 'order_paid',
+                    to: 'different@example.com',
+                    data: ['reference' => 'ABC-123'],
+                    idempotencyKey: 'test-key-004'
+                );
+            } catch (MogotesIdempotencyConflictException) {
+                // Esperado
+            }
+
+            // Verificar que solo se hizo 1 request (sin retry)
+            Http::assertSentCount(1);
+        });
+    });
+
+    describe('WhatsApp - Idempotency conflict', function (): void {
+        it('lanza MogotesIdempotencyConflictException en 409 para WhatsApp', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'El idempotency_key ya fue usado con un payload distinto.',
+                    ],
+                ], 409),
+            ]);
+
+            expect(fn () => Mogotes::whatsapp(
+                template: 'order_confirmation',
+                to: '+54 9 11 9999-8888',
+                data: ['order_id' => 'DIFFERENT-ID'],
+                idempotencyKey: 'test-key-whatsapp'
+            ))->toThrow(MogotesIdempotencyConflictException::class);
+        });
+    });
+
+    describe('Método send genérico - Idempotency conflict', function (): void {
+        it('lanza MogotesIdempotencyConflictException en 409 para cualquier canal', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'Conflicto de idempotencia.',
+                    ],
+                ], 409),
+            ]);
+
+            expect(fn () => Mogotes::notifications()->send(
+                channel: 'sms',
+                template: 'verification_code',
+                to: '+54 9 11 1234-5678',
+                data: ['code' => '999999'],
+                idempotencyKey: 'test-key-sms'
+            ))->toThrow(MogotesIdempotencyConflictException::class);
         });
     });
 });

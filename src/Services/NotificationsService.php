@@ -6,6 +6,7 @@ namespace Dantofema\MogotesLaravel\Services;
 
 use Dantofema\MogotesLaravel\Exceptions\MogotesApiException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesConnectionException;
+use Dantofema\MogotesLaravel\Exceptions\MogotesIdempotencyConflictException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesUnauthorizedException;
 use Dantofema\MogotesLaravel\MogotesClient;
 use Exception;
@@ -93,6 +94,19 @@ final readonly class NotificationsService
                 throw MogotesUnauthorizedException::fromResponse($response);
             }
 
+            // Validar 409 ANTES del failed() genérico (importante: failed() incluye 409)
+            if ($response->status() === 409) {
+                $correlationId = $response->header('X-Correlation-Id');
+                $errorData = $response->json('error');
+                $message = $errorData['message'] ?? 'El idempotency_key ya fue usado con un payload distinto.';
+
+                throw MogotesIdempotencyConflictException::fromResponse(
+                    message: $message,
+                    idempotencyKey: $idempotencyKey,
+                    correlationId: $correlationId
+                );
+            }
+
             if ($response->failed()) {
                 throw MogotesApiException::fromResponse($response);
             }
@@ -102,7 +116,7 @@ final readonly class NotificationsService
 
             return $responseData;
 
-        } catch (MogotesUnauthorizedException|MogotesApiException $e) {
+        } catch (MogotesUnauthorizedException|MogotesApiException|MogotesIdempotencyConflictException $e) {
             throw $e;
         } catch (Exception $e) {
             throw MogotesConnectionException::unreachable($e->getMessage());
