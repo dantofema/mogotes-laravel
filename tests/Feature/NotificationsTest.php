@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Dantofema\MogotesLaravel\Exceptions\MogotesApiException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesConnectionException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesIdempotencyConflictException;
+use Dantofema\MogotesLaravel\Exceptions\MogotesRateLimitException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesUnauthorizedException;
 use Dantofema\MogotesLaravel\Facades\Mogotes;
 use Illuminate\Support\Facades\Http;

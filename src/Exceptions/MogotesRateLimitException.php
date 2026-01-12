@@ -10,7 +10,8 @@ final class MogotesRateLimitException extends MogotesApiException
 {
     public function __construct(
         string $message,
-        private readonly int $retryAfterSeconds = 60
+        private readonly int $retryAfterSeconds = 60,
+        private readonly ?int $rateLimitLimit = null,
     ) {
         parent::__construct($message, 'rate_limit_exceeded', 429);
     }
@@ -18,6 +19,11 @@ final class MogotesRateLimitException extends MogotesApiException
     public function getRetryAfterSeconds(): int
     {
         return $this->retryAfterSeconds;
+    }
+
+    public function getRateLimitLimit(): ?int
+    {
+        return $this->rateLimitLimit;
     }
 
     public static function fromResponse(Response $response): self
@@ -28,11 +34,15 @@ final class MogotesRateLimitException extends MogotesApiException
         $errorMessage = $body['error']['message'] ?? 'Límite de tasa excedido. Intenta nuevamente más tarde.';
 
         $retryAfter = $response->header('Retry-After');
-        $retryAfterSeconds = is_string($retryAfter) ? (int) $retryAfter : 60;
+        $retryAfterSeconds = is_string($retryAfter) && $retryAfter !== '' ? (int) $retryAfter : 60;
+
+        $rateLimitLimit = $response->header('X-RateLimit-Limit');
+        $rateLimitLimitValue = is_string($rateLimitLimit) && $rateLimitLimit !== '' ? (int) $rateLimitLimit : null;
 
         return new self(
             message: is_string($errorMessage) ? $errorMessage : 'Límite de tasa excedido. Intenta nuevamente más tarde.',
-            retryAfterSeconds: max(1, $retryAfterSeconds)
+            retryAfterSeconds: max(1, $retryAfterSeconds),
+            rateLimitLimit: $rateLimitLimitValue
         );
     }
 }

@@ -7,6 +7,7 @@ namespace Dantofema\MogotesLaravel\Services;
 use Dantofema\MogotesLaravel\Exceptions\MogotesApiException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesConnectionException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesIdempotencyConflictException;
+use Dantofema\MogotesLaravel\Exceptions\MogotesRateLimitException;
 use Dantofema\MogotesLaravel\Exceptions\MogotesUnauthorizedException;
 use Dantofema\MogotesLaravel\MogotesClient;
 use Exception;
@@ -107,6 +108,11 @@ final readonly class NotificationsService
                 );
             }
 
+            // Validar 429 Rate Limit (exponer Retry-After para backoff)
+            if ($response->status() === 429) {
+                throw MogotesRateLimitException::fromResponse($response);
+            }
+
             if ($response->failed()) {
                 throw MogotesApiException::fromResponse($response);
             }
@@ -116,7 +122,7 @@ final readonly class NotificationsService
 
             return $responseData;
 
-        } catch (MogotesUnauthorizedException|MogotesApiException|MogotesIdempotencyConflictException $e) {
+        } catch (MogotesUnauthorizedException|MogotesApiException|MogotesIdempotencyConflictException|MogotesRateLimitException $e) {
             throw $e;
         } catch (Exception $e) {
             throw MogotesConnectionException::unreachable($e->getMessage());
