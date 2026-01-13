@@ -73,6 +73,20 @@ class MogotesLaravel
     }
 
     /**
+     * Genera una URL de WhatsApp usando una plantilla de Mogotes (modo síncrono).
+     *
+     * @param  string  $template  El identificador de la plantilla.
+     * @param  string  $to  El destinatario (teléfono).
+     * @param  array<string, mixed>  $data  Variables para inyectar en la plantilla.
+     * @param  string|null  $idempotencyKey  Clave de idempotencia (se genera automáticamente si es null).
+     * @return string URL wa.me lista para abrir.
+     */
+    public function whatsappUrl(string $template, string $to, array $data = [], ?string $idempotencyKey = null): string
+    {
+        return $this->notifications()->whatsappUrl($template, $to, $data, $idempotencyKey);
+    }
+
+    /**
      * Obtiene el servicio de notificaciones.
      */
     public function notifications(): NotificationsService

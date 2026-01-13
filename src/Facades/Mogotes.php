@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static NotificationsService notifications()
  * @method static array email(string $template, string $to, array $data = [], ?string $idempotencyKey = null)
  * @method static array whatsapp(string $template, string $to, array $data = [], ?string $idempotencyKey = null)
+ * @method static string whatsappUrl(string $template, string $to, array $data = [], ?string $idempotencyKey = null)
  *
  * @see \Dantofema\MogotesLaravel\MogotesLaravel
  */

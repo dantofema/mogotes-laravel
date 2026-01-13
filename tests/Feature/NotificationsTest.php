@@ -147,6 +147,163 @@ describe('Slice 002 - Notificaciones', function (): void {
         });
     });
 
+    describe('Happy paths - WhatsApp URL (sync)', function (): void {
+        it('devuelve la URL de WhatsApp directamente', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_sync_123',
+                    'status' => 'sent',
+                    'channel' => 'whatsapp',
+                    'result' => [
+                        'whatsapp_url' => 'https://wa.me/541161274482?text=Tu%20pedido%20ABC-123%20fue%20confirmado.',
+                    ],
+                ], 201),
+            ]);
+
+            $url = Mogotes::whatsappUrl(
+                template: 'order_confirmation',
+                to: '+54 11 6127-4482',
+                data: ['order_id' => 'ABC-123']
+            );
+
+            expect($url)->toBe('https://wa.me/541161274482?text=Tu%20pedido%20ABC-123%20fue%20confirmado.');
+
+            Http::assertSent(function ($request): bool {
+                $body = $request->data();
+
+                return $body['channel'] === 'whatsapp'
+                    && $body['sync'] === true
+                    && $body['to'] === '+54 11 6127-4482';
+            });
+        });
+
+        it('envía sync=true en el payload', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_sync_456',
+                    'status' => 'sent',
+                    'result' => [
+                        'whatsapp_url' => 'https://wa.me/541161274482?text=Hola',
+                    ],
+                ], 201),
+            ]);
+
+            Mogotes::whatsappUrl('template', '+5411612744882', ['name' => 'Test']);
+
+            Http::assertSent(function ($request): bool {
+                $body = $request->data();
+
+                return isset($body['sync']) && $body['sync'] === true;
+            });
+        });
+
+        it('puede usar idempotency_key personalizada', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_sync_789',
+                    'status' => 'sent',
+                    'result' => [
+                        'whatsapp_url' => 'https://wa.me/541161274482?text=Hola',
+                    ],
+                ], 201),
+            ]);
+
+            Mogotes::whatsappUrl(
+                template: 'order_confirmation',
+                to: '+54 11 6127-4482',
+                data: ['order_id' => 'ABC-123'],
+                idempotencyKey: 'my-custom-sync-key'
+            );
+
+            Http::assertSent(function ($request): bool {
+                $body = $request->data();
+
+                return $body['idempotency_key'] === 'my-custom-sync-key';
+            });
+        });
+
+        it('puede acceder via notifications() service', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_sync_service',
+                    'status' => 'sent',
+                    'result' => [
+                        'whatsapp_url' => 'https://wa.me/541161274482?text=Via%20Service',
+                    ],
+                ], 201),
+            ]);
+
+            $url = Mogotes::notifications()->whatsappUrl(
+                template: 'order_confirmation',
+                to: '+54 11 6127-4482',
+                data: ['order_id' => 'ABC-123']
+            );
+
+            expect($url)->toBe('https://wa.me/541161274482?text=Via%20Service');
+        });
+    });
+
+    describe('Failure paths - WhatsApp URL (sync)', function (): void {
+        it('lanza MogotesApiException cuando no se recibe whatsapp_url', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'id' => 'notif_no_url',
+                    'status' => 'sent',
+                    'result' => null,
+                ], 201),
+            ]);
+
+            expect(fn () => Mogotes::whatsappUrl('template', '+5411612744882', []))
+                ->toThrow(MogotesApiException::class, 'No se recibió whatsapp_url en la respuesta.');
+        });
+
+        it('lanza MogotesApiException en error de procesamiento (422)', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'processing_error',
+                        'message' => 'Teléfono inválido para WhatsApp.',
+                    ],
+                ], 422),
+            ]);
+
+            expect(fn () => Mogotes::whatsappUrl('template', '123', []))
+                ->toThrow(MogotesApiException::class);
+        });
+
+        it('lanza MogotesUnauthorizedException en 401', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'unauthorized',
+                        'message' => 'API key inválida',
+                    ],
+                ], 401),
+            ]);
+
+            expect(fn () => Mogotes::whatsappUrl('template', '+5411612744882', []))
+                ->toThrow(MogotesUnauthorizedException::class);
+        });
+
+        it('lanza MogotesIdempotencyConflictException en 409', function (): void {
+            Http::fake([
+                'api.mogotes.test/v1/notifications' => Http::response([
+                    'error' => [
+                        'code' => 'idempotency_conflict',
+                        'message' => 'El idempotency_key ya fue usado con un payload distinto.',
+                    ],
+                ], 409),
+            ]);
+
+            expect(fn () => Mogotes::whatsappUrl(
+                template: 'order_confirmation',
+                to: '+54 11 6127-4482',
+                data: ['order_id' => 'XYZ-999'],
+                idempotencyKey: 'conflict-key'
+            ))->toThrow(MogotesIdempotencyConflictException::class);
+        });
+    });
+
     describe('Failure paths', function (): void {
         it('lanza MogotesUnauthorizedException cuando recibe 401', function (): void {
             Http::fake([

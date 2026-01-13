@@ -60,6 +60,37 @@ final readonly class NotificationsService
     }
 
     /**
+     * Genera una URL de WhatsApp usando una plantilla de Mogotes (modo síncrono).
+     *
+     * @param  string  $template  El identificador de la plantilla.
+     * @param  string  $to  El destinatario (teléfono).
+     * @param  array<string, mixed>  $data  Variables para inyectar en la plantilla.
+     * @param  string|null  $idempotencyKey  Clave de idempotencia (se genera automáticamente si es null).
+     * @return string URL wa.me lista para abrir.
+     *
+     * @throws MogotesApiException Si hay error de procesamiento o no se recibe whatsapp_url.
+     */
+    public function whatsappUrl(string $template, string $to, array $data = [], ?string $idempotencyKey = null): string
+    {
+        $response = $this->send(
+            channel: 'whatsapp',
+            template: $template,
+            to: $to,
+            data: $data,
+            idempotencyKey: $idempotencyKey,
+            sync: true
+        );
+
+        $url = $response['result']['whatsapp_url'] ?? null;
+
+        if ($url === null || $url === '') {
+            throw new MogotesApiException('No se recibió whatsapp_url en la respuesta.');
+        }
+
+        return $url;
+    }
+
+    /**
      * Envía una notificación genérica a través del canal especificado.
      *
      * @param  string  $channel  El canal de envío (email, whatsapp, sms, push).
@@ -67,6 +98,7 @@ final readonly class NotificationsService
      * @param  string  $to  El destinatario.
      * @param  array<string, mixed>  $data  Variables para inyectar en la plantilla.
      * @param  string|null  $idempotencyKey  Clave de idempotencia (se genera automáticamente si es null).
+     * @param  bool  $sync  Si es true, procesa de forma síncrona (solo WhatsApp).
      * @return array<string, mixed> Respuesta de la API de Mogotes.
      */
     public function send(
@@ -74,7 +106,8 @@ final readonly class NotificationsService
         string $template,
         string $to,
         array $data = [],
-        ?string $idempotencyKey = null
+        ?string $idempotencyKey = null,
+        bool $sync = false
     ): array {
         try {
             $idempotencyKey ??= (string) Str::uuid();
@@ -86,6 +119,10 @@ final readonly class NotificationsService
                 'data' => $data,
                 'idempotency_key' => $idempotencyKey,
             ];
+
+            if ($sync) {
+                $payload['sync'] = true;
+            }
 
             $request = $this->client->buildRequest();
 
